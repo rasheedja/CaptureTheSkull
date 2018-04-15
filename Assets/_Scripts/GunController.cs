@@ -21,6 +21,7 @@ public class GunController : MonoBehaviour {
     void Start()
     {
         currentAmmo = magazineSize;
+        UpdateAmmoCount();
     }
 
     void Update()

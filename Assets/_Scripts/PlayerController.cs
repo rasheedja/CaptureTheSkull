@@ -5,6 +5,7 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour {
     public GameObject primaryWeapon;
     public GameObject secondaryWeapon;
+    public GameObject heldSkull;
 
     private bool isHoldingSkull;
     private GameObject skull;
@@ -15,14 +16,14 @@ public class PlayerController : MonoBehaviour {
     void Start () {
         primaryWeapon.SetActive(true);
         secondaryWeapon.SetActive(false);
+        heldSkull.SetActive(false);
         primaryWeapon.GetComponent<GunController>().UpdateAmmoCount();
         maxHealth = health;
         UIManager.Instance.UpdateHealth(health);
     }
 
-    // Update is called once per frame
     void Update () {
-		if ((Input.GetKeyDown(KeyCode.Alpha1) || Input.GetKeyDown(KeyCode.Keypad1)) && !primaryWeapon.activeInHierarchy)
+		if ((Input.GetKeyDown(KeyCode.Alpha1) || Input.GetKeyDown(KeyCode.Keypad1)) && !primaryWeapon.activeInHierarchy && !heldSkull.activeInHierarchy)
         {
             StartCoroutine(SwapWeapon(secondaryWeapon, primaryWeapon));
         }
@@ -40,12 +41,19 @@ public class PlayerController : MonoBehaviour {
     public void HoldSkull(GameObject skull)
     {
         this.isHoldingSkull = true;
+        heldSkull.SetActive(true);
         this.skull = skull;
+        // When holding a skull, you can only use your pistol
+        if (!secondaryWeapon.activeInHierarchy)
+        {
+            StartCoroutine(SwapWeapon(primaryWeapon, secondaryWeapon));
+        }
     }
 
     public void DropSkull()
     {
         this.isHoldingSkull = false;
+        heldSkull.SetActive(true);
         this.skull.SetActive(true);
     }
 

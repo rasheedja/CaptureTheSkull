@@ -120,16 +120,19 @@ public class GunController : MonoBehaviour {
     {
         isSwapping = true;
 
-        // Instantly lower the gun so it is in the correct position when the animation starts
+        // lower the gun so it is in the correct position when the animation starts
         this.transform.DOLocalMoveY(swapYPosition, 0);
         this.transform.DOLocalRotate(new Vector3(swapXRotate, originalLocalRotation.y, originalLocalRotation.z), 0);
 
+        // Display the gun and update the ammo count
+        this.gameObject.SetActive(true);
+        UpdateAmmoCount();
+        
         // Move weapon back so it's in the correct position when swapped to again
         this.transform.DOLocalMove(originalLocalPosition, swapTime);
         this.transform.DOLocalRotate(originalLocalRotation, swapTime);
         yield return new WaitForSeconds(swapTime);
 
         isSwapping = false;
-        this.gameObject.SetActive(true);
     }
 }

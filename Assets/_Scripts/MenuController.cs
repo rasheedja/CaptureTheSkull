@@ -16,11 +16,6 @@ public class MenuController : MonoBehaviour
         cam.DOLookAt(cameraEndLookAt.position, 10).SetLoops(-1, LoopType.Yoyo);
     }
 
-    public void ButtonHandlerStartGame()
-    {
-        UnityEngine.SceneManagement.SceneManager.LoadScene(1);
-    }
-
     public void ButtonHandlerQuitGame()
     {
         Application.Quit();

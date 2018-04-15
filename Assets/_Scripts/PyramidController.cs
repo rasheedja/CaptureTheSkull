@@ -11,16 +11,7 @@ public class PyramidController : MonoBehaviour
             if (other.GetComponent<PlayerController>().IsHoldingSkull())
             {
                 other.GetComponent<PlayerController>().DropSkull();
-                if (this.tag == "Blue")
-                {
-                    GameManager.Instance.IncrementBlueScore();
-                }
-                else
-                {
-                    GameManager.Instance.IncrementRedScore();
-                }
             }
-            other.GetComponent<PlayerController>().DecreaseHealth(10);
         }
     }
 }

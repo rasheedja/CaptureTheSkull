@@ -24,12 +24,16 @@ public class GunController : MonoBehaviour {
     private Vector3 originalLocalPosition;
     private Vector3 originalLocalRotation;
 
+    void Awake()
+    {
+        originalLocalPosition = this.transform.localPosition;
+        originalLocalRotation = new Vector3(this.transform.localRotation.x, this.transform.localRotation.y, this.transform.localRotation.z);
+    }
+
     void Start()
     {
         currentAmmo = magazineSize;
         UpdateAmmoCount();
-        originalLocalPosition  = this.transform.localPosition;
-        originalLocalRotation = new Vector3(this.transform.localRotation.x, this.transform.localRotation.y, this.transform.localRotation.z);
     }
 
     void Update()
@@ -134,5 +138,16 @@ public class GunController : MonoBehaviour {
         yield return new WaitForSeconds(swapTime);
 
         isSwapping = false;
+    }
+
+    /**
+     * Used to just lower and disable the weapon without an animation. This is normally done when a player first spawns in
+     * for their secondary weapons
+     */
+    public void DisableWeapon()
+    {
+        this.transform.DOLocalMoveY(swapYPosition, 0);
+        this.transform.DOLocalRotate(new Vector3(swapXRotate, originalLocalRotation.y, originalLocalRotation.z), 0);
+        this.gameObject.SetActive(false);
     }
 }

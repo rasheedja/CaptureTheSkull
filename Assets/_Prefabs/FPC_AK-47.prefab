@@ -413,5 +413,8 @@ MonoBehaviour:
   magazineSize: 30
   reserveAmmo: 90
   reloadTime: 1
+  swapTime: 0.25
   reloadXRotate: 40
   reloadYPosition: -0.25
+  swapXRotate: 60
+  swapYPosition: -0.4

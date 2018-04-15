@@ -11,36 +11,44 @@ public class GunController : MonoBehaviour {
     public int magazineSize;
     public int reserveAmmo;
     public float reloadTime;
-    // The reload variables should use local transform values
+    public float swapTime;
+    // The reload and swap variables should use local transform values
     public float reloadXRotate;
     public float reloadYPosition;
+    public float swapXRotate;
+    public float swapYPosition;
 
     private bool isReloading = false;
+    private bool isSwapping = false;
     private int currentAmmo;
+    private Vector3 originalLocalPosition;
+    private Vector3 originalLocalRotation;
 
     void Start()
     {
         currentAmmo = magazineSize;
         UpdateAmmoCount();
+        originalLocalPosition  = this.transform.localPosition;
+        originalLocalRotation = new Vector3(this.transform.localRotation.x, this.transform.localRotation.y, this.transform.localRotation.z);
     }
 
     void Update()
     {
         // Defaults: Left Mouse and Left Ctrl
-        if (Input.GetButton("Fire1") && currentAmmo != 0)
+        if (Input.GetButton("Fire1") && currentAmmo != 0 && !isReloading && !isSwapping)
         {
             StartCoroutine(Shoot());
         }
 
         // TODO: Figure out customisable inputs
-        if (Input.GetKeyDown(KeyCode.R) && !isReloading && (currentAmmo != magazineSize) && reserveAmmo != 0)
+        if (Input.GetKeyDown(KeyCode.R) && !isReloading && !isSwapping && (currentAmmo != magazineSize) && reserveAmmo != 0)
         {
             StartCoroutine(Reload());
         }
     }
 
     // Update the ammo count in the UI
-    private void UpdateAmmoCount()
+    public void UpdateAmmoCount()
     {
         UIManager.Instance.UpdateAmmo(currentAmmo, reserveAmmo);
     }
@@ -74,9 +82,6 @@ public class GunController : MonoBehaviour {
     {
         isReloading = true;
 
-        // Save original transforms to move gun back to original position
-        Vector3 originalLocalPosition = this.transform.localPosition;
-        Vector3 originalLocalRotation = new Vector3(this.transform.localRotation.x, this.transform.localRotation.y, this.transform.localRotation.z);
         float halfReloadTime = reloadTime / 2;
 
         // The reload animation
@@ -93,5 +98,38 @@ public class GunController : MonoBehaviour {
         UpdateAmmoCount();
 
         isReloading = false;
+    }
+
+    // Lower the weapon, used for swapping to a new weapon
+    public IEnumerator LowerWeapon()
+    {
+        isSwapping = true;
+
+
+        // The lower animation
+        this.transform.DOLocalMoveY(swapYPosition, swapTime);
+        this.transform.DOLocalRotate(new Vector3(swapXRotate, originalLocalRotation.y, originalLocalRotation.z), swapTime);
+        yield return new WaitForSeconds(swapTime);
+
+        isSwapping = false;
+        this.gameObject.SetActive(false);
+    }
+
+    // Raise the weapon, used for swapping to a new weapon
+    public IEnumerator RaiseWeapon()
+    {
+        isSwapping = true;
+
+        // Instantly lower the gun so it is in the correct position when the animation starts
+        this.transform.DOLocalMoveY(swapYPosition, 0);
+        this.transform.DOLocalRotate(new Vector3(swapXRotate, originalLocalRotation.y, originalLocalRotation.z), 0);
+
+        // Move weapon back so it's in the correct position when swapped to again
+        this.transform.DOLocalMove(originalLocalPosition, swapTime);
+        this.transform.DOLocalRotate(originalLocalRotation, swapTime);
+        yield return new WaitForSeconds(swapTime);
+
+        isSwapping = false;
+        this.gameObject.SetActive(true);
     }
 }

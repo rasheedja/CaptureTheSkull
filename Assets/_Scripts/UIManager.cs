@@ -10,6 +10,8 @@ public class UIManager : MonoBehaviour {
     public Text ammoText;
     public Text healthText;
     public Text timerText;
+    public Text blueScoreText;
+    public Text redScoreText;
 
     public static UIManager Instance { get; private set; }
 
@@ -29,9 +31,24 @@ public class UIManager : MonoBehaviour {
         healthText.text = "Health: " + health;
     }
 
-    public void UpdateTimer()
+    /**
+     * Update the timer. 
+     * 
+     * @param timeText: The time exactly how it should be displayed, e.g. 01:59
+     */
+    public void UpdateTimer(string timeText)
     {
+        timerText.text = timeText;
+    }
 
+    public void UpdateBlueScore(int score)
+    {
+        blueScoreText.text = "Blue Score: " + score;
+    }
+
+    public void UpdateRedScore(int score)
+    {
+        redScoreText.text = "Red Score: " + score;
     }
 
     /**

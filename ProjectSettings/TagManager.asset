@@ -6,6 +6,9 @@ TagManager:
   tags:
   - Blue
   - Red
+  - Beam
+  - BlueSoldier
+  - RedSoldier
   layers:
   - Default
   - TransparentFX

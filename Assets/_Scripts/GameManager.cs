@@ -42,13 +42,13 @@ public class GameManager : Photon.MonoBehaviour {
         if (playerTeam == "Blue")
         {
             player.tag = "Blue";
-            GameObject chosenSpawn = blueSpawns[Random.Range(0, blueSpawns.Count - 1)];
+            GameObject chosenSpawn = GetRandomBlueSpawn();
             Instantiate(FPSController, chosenSpawn.transform.position, chosenSpawn.transform.rotation);
         }
         else
         {
             player.tag = "Red";
-            GameObject chosenSpawn = redSpawns[Random.Range(0, redSpawns.Count - 1)];
+            GameObject chosenSpawn = GetRandomRedSpawn();
             Instantiate(FPSController, chosenSpawn.transform.position, chosenSpawn.transform.rotation);
         }
     }
@@ -64,6 +64,22 @@ public class GameManager : Photon.MonoBehaviour {
         {
             EndGame();
         }
+    }
+
+    /**
+     * Get a random spawn location for the blue team
+     */
+    public GameObject GetRandomBlueSpawn()
+    {
+        return blueSpawns[Random.Range(0, blueSpawns.Count - 1)];
+    }
+
+    /**
+    * Get a random spawn location for the red team
+    */
+    public GameObject GetRandomRedSpawn()
+    {
+        return redSpawns[Random.Range(0, blueSpawns.Count - 1)];
     }
 
     [PunRPC]

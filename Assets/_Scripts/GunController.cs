@@ -36,18 +36,19 @@ public class GunController : MonoBehaviour {
         UpdateAmmoCount();
     }
 
-    void Update()
+    public void Shoot()
     {
-        // Defaults: Left Mouse and Left Ctrl
-        if (Input.GetButton("Fire1") && currentAmmo != 0 && !isReloading && !isSwapping)
+        if (currentAmmo != 0 && !isReloading && !isSwapping)
         {
-            StartCoroutine(Shoot());
+            StartCoroutine(ShootCR());
         }
+    }
 
-        // TODO: Figure out customisable inputs
-        if (Input.GetKeyDown(KeyCode.R) && !isReloading && !isSwapping && (currentAmmo != magazineSize) && reserveAmmo != 0)
+    public void Reload()
+    {
+        if (!isReloading && !isSwapping && (currentAmmo != magazineSize) && reserveAmmo != 0)
         {
-            StartCoroutine(Reload());
+            StartCoroutine(ReloadCR());
         }
     }
 
@@ -58,14 +59,14 @@ public class GunController : MonoBehaviour {
     }
 
     // Play the shooting animation and deplete ammo from the gun
-    IEnumerator Shoot()
+    IEnumerator ShootCR()
     {
         if (!shootAnim.isPlaying)
         {
             shootSound.Play();
             shootAnim.Play();
             StartCoroutine(ShootFlash());
-            UIManager.Instance.PhysicsRaycasts(transform.rotation);
+            PlayerController.PhysicsRaycasts(transform.rotation);
             yield return new WaitForSeconds(shootAnim.clip.length);
             shootAnim.Stop();
             currentAmmo--;
@@ -82,7 +83,7 @@ public class GunController : MonoBehaviour {
     }
 
     // Play the reload animation and then reload the gun
-    IEnumerator Reload()
+    IEnumerator ReloadCR()
     {
         isReloading = true;
 

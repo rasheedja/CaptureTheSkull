@@ -7,34 +7,47 @@ public class PlayerController : MonoBehaviour {
     public GameObject secondaryWeapon;
     public GameObject heldSkull;
 
+    private GameObject currentWeapon;
     private bool isHoldingSkull;
     private SkullController skullController;
-    private int maxHealth;
-    private int health = 100;
-    private GameObject soldier; //The soldier model. This represents the players position to other players in the network and is also shown when the player dies.
+    private GameObject soldier; //The soldier model. This represents the players position to other players in the network, stores the player's health, and is also shown when the player dies.
 
     void Start () {
+        currentWeapon = primaryWeapon;
         secondaryWeapon.GetComponent<GunController>().DisableWeapon();
         heldSkull.SetActive(false);
         secondaryWeapon.GetComponent<GunController>().UpdateAmmoCount();
-        maxHealth = health;
-        UIManager.Instance.UpdateHealth(health);
 
         if (this.tag == "Blue")
         {
             soldier = PhotonNetwork.Instantiate("Soldier_B", this.transform.position, this.transform.rotation, 0);
+            soldier.GetComponent<SoldierController>().SetOwner(this);
         }
         else
         {
             soldier = PhotonNetwork.Instantiate("Soldier_R", this.transform.position, this.transform.rotation, 0);
+            soldier.GetComponent<SoldierController>().SetOwner(this);
         }
     }
 
     void Update () {
-		if ((Input.GetKeyDown(KeyCode.Alpha1) || Input.GetKeyDown(KeyCode.Keypad1)) && !primaryWeapon.activeInHierarchy && !heldSkull.activeInHierarchy)
+        // Defaults: Left Mouse and Left Ctrl
+        if (Input.GetButton("Fire1"))
+        {
+            currentWeapon.GetComponent<GunController>().Shoot();
+        }
+
+        // TODO: Figure out customisable inputs
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            currentWeapon.GetComponent<GunController>().Reload();
+        }
+
+        if ((Input.GetKeyDown(KeyCode.Alpha1) || Input.GetKeyDown(KeyCode.Keypad1)) && !primaryWeapon.activeInHierarchy && !heldSkull.activeInHierarchy)
         {
             StartCoroutine(SwapWeapon(secondaryWeapon, primaryWeapon));
         }
+
         if ((Input.GetKeyDown(KeyCode.Alpha2) || Input.GetKeyDown(KeyCode.Keypad2)) && !secondaryWeapon.activeInHierarchy)
         {
             StartCoroutine(SwapWeapon(primaryWeapon, secondaryWeapon));
@@ -42,6 +55,34 @@ public class PlayerController : MonoBehaviour {
 
         soldier.transform.position = new Vector3(this.transform.position.x, this.transform.position.y - 0.4f, this.transform.position.z);
         soldier.transform.rotation = this.transform.rotation;
+    }
+
+    /**
+     * This should be called when the gun is shot. This will determine what hit the gun and call the appropriate reaction
+     * function for the object that was hit. The logic for this function is based on the raycasting code from Lab 4.
+     */
+    public static void PhysicsRaycasts(Quaternion shooterRotation)
+    {
+        Vector3 centreOfScreen = new Vector3(Screen.width * 0.5f, Screen.height * 0.5f, 0);
+        Ray centreOfScreenRay = Camera.main.ScreenPointToRay(centreOfScreen);
+        RaycastHit hit;
+
+        if (Physics.Raycast(centreOfScreenRay, out hit))
+        {
+            Debug.Log("Raycast hit: " + hit.transform.name);
+            Debug.Log(shooterRotation);
+            //hit.transform.GetComponent<ObjectManagerBase>().Hit(hit, shooterRotation);
+            Debug.Log(hit.transform.GetComponent<ObjectManagerBase>().photonView);
+            hit.transform.GetComponent<ObjectManagerBase>().photonView.RPC("Hit", PhotonTargets.All, new object[] { hit.point, shooterRotation });
+
+            GameObject hitGameObject = hit.transform.root.gameObject;
+            Debug.Log(hitGameObject.tag);
+            Debug.Log(hitGameObject);
+            if (hitGameObject.tag == "BlueSoldier" || hitGameObject.tag == "RedSoldier")
+            {
+                hitGameObject.GetComponent<SoldierController>().photonView.RPC("DecreaseHealth", PhotonTargets.All, new object[] { 10 });
+            }
+        }
     }
 
     public bool IsHoldingSkull()
@@ -89,33 +130,28 @@ public class PlayerController : MonoBehaviour {
         StartCoroutine(weaponFromScript.LowerWeapon());
         yield return new WaitForSeconds(weaponFromScript.swapTime);
         StartCoroutine(weaponToScript.RaiseWeapon());
+        currentWeapon = weaponTo;
     }
 
-    public void DecreaseHealth(int amount)
+    /**
+     * Drop the camera, disable player controls, and wait 10 seconds before respawning.
+     */
+    public IEnumerator Die()
     {
-        health -= amount;
-        if (health <= 0)
-        {
-            health = 0;
-            Die();
-        }
+        this.gameObject.GetComponent<CharacterController>().enabled = false;
+        this.currentWeapon.SetActive(false);
+        string team = this.gameObject.tag;
+        yield return new WaitForSeconds(2);
 
-        UIManager.Instance.UpdateHealth(health);
-    }
+        this.soldier.GetComponent<SoldierController>().SetOwner(null);
+        this.soldier.GetComponent<SoldierController>().photonView.RPC("Despawn", PhotonTargets.All, new object[] { 10 });
 
-    public void IncreaseHealth(int amount)
-    {
-        health += amount;
-        if (health > maxHealth)
-        {
-            health = maxHealth;
-        }
-
-        UIManager.Instance.UpdateHealth(health);
-    }
-
-    public void Die()
-    {
-        Debug.Log("bang bang...");
+        GameObject newSpawn = GameManager.Instance.GetRandomBlueSpawn();
+        this.transform.position = newSpawn.transform.position;
+        this.transform.rotation = newSpawn.transform.rotation;
+        soldier = PhotonNetwork.Instantiate("Soldier_B", this.transform.position, this.transform.rotation, 0);
+        this.gameObject.GetComponent<CharacterController>().enabled = true;
+        this.currentWeapon.SetActive(true);
+        soldier.GetComponent<SoldierController>().SetOwner(this);
     }
 }

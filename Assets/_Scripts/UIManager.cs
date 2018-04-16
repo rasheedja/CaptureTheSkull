@@ -50,26 +50,4 @@ public class UIManager : MonoBehaviour {
     {
         redScoreText.text = "Red Score: " + score;
     }
-
-    /**
-     * This should be called when the gun is shot. This will determine what hit the gun and call the appropriate reaction
-     * function for the object that was hit. The logic for this function is based on the raycasting code from Lab 4.
-     */
-    public void PhysicsRaycasts(Quaternion shooterRotation)
-    {
-        Vector3 centreOfScreen = new Vector3(Screen.width * 0.5f, Screen.height * 0.5f, 0);
-        Ray centreOfScreenRay = Camera.main.ScreenPointToRay(centreOfScreen);
-        RaycastHit hit;
-
-        if (Physics.Raycast(centreOfScreenRay, out hit))
-        {
-            Debug.Log("Raycast hit: " + hit.transform.name);
-            hit.transform.GetComponent<ObjectManagerBase>().Hit(hit.point, shooterRotation);
-        }
-        else
-        {
-
-        }
-
-    }
 }

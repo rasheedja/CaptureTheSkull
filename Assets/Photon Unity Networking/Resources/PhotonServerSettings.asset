@@ -51,4 +51,11 @@ MonoBehaviour:
   - IncrementRedScore
   - DisableSkull
   - EnableSkull
+  - Hit
+  - DecreaseHealth
+  - Die
+  - IncreaseHealth
+  - DecreaseHealthRPC
+  - IncreaseHealthRPC
+  - Despawn
   DisableAutoOpenWizard: 1

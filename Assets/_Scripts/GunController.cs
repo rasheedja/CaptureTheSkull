@@ -6,6 +6,7 @@ using DG.Tweening;
 
 public class GunController : MonoBehaviour {
     public AudioSource shootSound;
+    public AudioSource cockSound;
     public Animation shootAnim;
     public MeshRenderer shootFlash;
     public int magazineSize;
@@ -96,7 +97,8 @@ public class GunController : MonoBehaviour {
     IEnumerator ReloadCR()
     {
         isReloading = true;
-
+        cockSound.Play();
+        
         float halfReloadTime = reloadTime / 2;
 
         // The reload animation

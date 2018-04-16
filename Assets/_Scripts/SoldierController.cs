@@ -73,6 +73,11 @@ public class SoldierController : Photon.MonoBehaviour {
             transform.position = Vector3.Lerp(transform.position, correctPlayerPos, Time.deltaTime * 10f);
             transform.rotation = Quaternion.Lerp(transform.rotation, correctPlayerRot, Time.deltaTime * 10f);
         }
+
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            DecreaseHealth(100);
+        }
     }
 
     void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
@@ -95,72 +100,86 @@ public class SoldierController : Photon.MonoBehaviour {
         this.owner = owner;
     }
 
+    public PlayerController GetOwner()
+    {
+        return owner;
+    }
+
     [PunRPC]
     public void DecreaseHealth(int amount)
     {
-        Debug.Log("decreasing health");
-        health -= amount;
-        if (health <= 0)
+        if (!isDead)
         {
-            health = 0;
-            photonView.RPC("Die", PhotonTargets.All);
-        }
+            Debug.Log("decreasing health");
+            health -= amount;
+            if (health <= 0)
+            {
+                health = 0;
+                photonView.RPC("Die", PhotonTargets.All);
+            }
 
-        if (photonView.isMine)
-        {
-            Debug.Log("mine");
-            UIManager.Instance.UpdateHealth(health);
+            if (photonView.isMine)
+            {
+                Debug.Log("mine");
+                UIManager.Instance.UpdateHealth(health);
+            }
         }
     }
 
     [PunRPC]
     public void IncreaseHealth(int amount)
     {
-        health += amount;
-        if (health > maxHealth)
+        if (!isDead)
         {
-            health = maxHealth;
-        }
+            health += amount;
+            if (health > maxHealth)
+            {
+                health = maxHealth;
+            }
 
-        if (photonView.isMine)
-        {
-            UIManager.Instance.UpdateHealth(health);
+            if (photonView.isMine)
+            {
+                UIManager.Instance.UpdateHealth(health);
+            }
         }
     }
 
     [PunRPC]
     public void Die()
     {
-        // If it's mine, re-enable renderers and colliders
-        if (photonView.isMine)
+        if (!isDead)
         {
-            foreach (SkinnedMeshRenderer renderer in this.gameObject.GetComponentsInChildren<SkinnedMeshRenderer>())
+            // If it's mine, re-enable renderers and colliders
+            if (photonView.isMine)
             {
-                renderer.enabled = true;
-            }
-            foreach (MeshRenderer renderer in this.gameObject.GetComponentsInChildren<MeshRenderer>())
-            {
-                renderer.enabled = true;
-            }
-            foreach (Collider collider in this.gameObject.GetComponentsInChildren<Collider>())
-            {
-                collider.enabled = true;
+                foreach (SkinnedMeshRenderer renderer in this.gameObject.GetComponentsInChildren<SkinnedMeshRenderer>())
+                {
+                    renderer.enabled = true;
+                }
+                foreach (MeshRenderer renderer in this.gameObject.GetComponentsInChildren<MeshRenderer>())
+                {
+                    renderer.enabled = true;
+                }
+                foreach (Collider collider in this.gameObject.GetComponentsInChildren<Collider>())
+                {
+                    collider.enabled = true;
+                }
+
+                StartCoroutine(owner.Die());
             }
 
-            StartCoroutine(owner.Die());
-        }
-
-        isDead = true;
-        this.gameObject.GetComponent<RagdollController>().EnableRagdoll();
-        if (heldSkull)
-        {
-            if (this.tag == "BlueSoldier")
+            isDead = true;
+            this.gameObject.GetComponent<RagdollController>().EnableRagdoll();
+            if (heldSkull.GetActive())
             {
-                UIManager.Instance.UpdateMessage("Red Skull Restored");
-            }
-            else
-            {
-                UIManager.Instance.UpdateMessage("Blue Skull Restored");
+                if (this.tag == "BlueSoldier")
+                {
+                    UIManager.Instance.UpdateMessage("Red Skull Restored");
+                }
+                else
+                {
+                    UIManager.Instance.UpdateMessage("Blue Skull Restored");
+                }
             }
         }
     }
@@ -168,6 +187,7 @@ public class SoldierController : Photon.MonoBehaviour {
     [PunRPC]
     public void Despawn(int despawnTime)
     {
+        owner = null;
         StartCoroutine(DespawnCR(despawnTime));
     }
 
@@ -311,7 +331,7 @@ public class SoldierController : Photon.MonoBehaviour {
         }
     }
 
-    public bool getIsDead()
+    public bool GetIsDead()
     {
         return isDead;
     }

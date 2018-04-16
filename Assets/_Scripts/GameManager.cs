@@ -44,17 +44,18 @@ public class GameManager : Photon.MonoBehaviour {
 
     public void InstantiatePlayer(string playerTeam)
     {
+        GameObject player = FPSController;
         if (playerTeam == "Blue")
         {
-            FPSController.tag = "Blue";
+            player.tag = "Blue";
             GameObject chosenSpawn = GetRandomBlueSpawn();
-            Instantiate(FPSController, chosenSpawn.transform.position, chosenSpawn.transform.rotation);
+            Instantiate(player, chosenSpawn.transform.position, chosenSpawn.transform.rotation);
         }
         else
         {
-            FPSController.tag = "Red";
+            player.tag = "Red";
             GameObject chosenSpawn = GetRandomRedSpawn();
-            Instantiate(FPSController, chosenSpawn.transform.position, chosenSpawn.transform.rotation);
+            Instantiate(player, chosenSpawn.transform.position, chosenSpawn.transform.rotation);
         }
     }
 

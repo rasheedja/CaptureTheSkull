@@ -58,4 +58,15 @@ MonoBehaviour:
   - DecreaseHealthRPC
   - IncreaseHealthRPC
   - Despawn
+  - SelectPrimaryWeapon
+  - SelectSecondaryWeapon
+  - Idle
+  - MoveBackward
+  - MoveForward
+  - MoveLeft
+  - MoveRight
+  - Jump
+  - HideSkull
+  - ShowSkull
+  - ShootActiveWeapon
   DisableAutoOpenWizard: 1

@@ -12,11 +12,6 @@ public class ObjectManager : ObjectManagerBase {
         particle.transform.rotation = shooterRotation;
         particle.transform.Rotate(new Vector3(particle.transform.rotation.x, 90));
         StartCoroutine(DeleteParticle(particle));
-
-        //if ((objectHit.tag == "BlueSoldier" || objectHit.tag == "RedSoldier"))
-        //{
-            //rootGameObject.GetComponent<SoldierController>().HurtOwner(10);
-        //}
     }
 
     IEnumerator DeleteParticle(GameObject particle)

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using DG.Tweening;
 
 /**
  * A singleton used to update the game view
@@ -12,6 +13,9 @@ public class UIManager : MonoBehaviour {
     public Text timerText;
     public Text blueScoreText;
     public Text redScoreText;
+    public Text killsText;
+    public Text deathsText;
+    public Text messageText;
 
     public static UIManager Instance { get; private set; }
 
@@ -49,5 +53,28 @@ public class UIManager : MonoBehaviour {
     public void UpdateRedScore(int score)
     {
         redScoreText.text = "Red Score: " + score;
+    }
+
+    public void UpdateKills(int kills)
+    {
+        killsText.text = "Kills: " + kills;
+    }
+
+    public void UpdateDeaths(int deaths)
+    {
+        deathsText.text = "Deaths: " + deaths;
+    }
+
+    public void UpdateMessage(string message)
+    {
+        StartCoroutine(DisplayMessage(message));
+    }
+
+    IEnumerator DisplayMessage(string message)
+    {
+        messageText.DOFade(255, 0f);
+        messageText.DOText(message, 1f).SetEase(Ease.Linear);
+        yield return new WaitForSeconds(3f);
+        messageText.DOFade(0, 2f);
     }
 }

@@ -36,17 +36,23 @@ public class GunController : MonoBehaviour {
         UpdateAmmoCount();
     }
 
-    public void Shoot()
+    /**
+     * If the gun is shootable, shoot
+     * 
+     * @param soldierController: The soldier that is holding a representation of this gun
+     */
+    public void Shoot(SoldierController soldierController)
     {
-        if (currentAmmo != 0 && !isReloading && !isSwapping)
+        if (currentAmmo != 0 && !IsBusy())
         {
-            StartCoroutine(ShootCR());
+            Debug.Log(soldierController);
+            StartCoroutine(ShootCR(soldierController));
         }
     }
 
     public void Reload()
     {
-        if (!isReloading && !isSwapping && (currentAmmo != magazineSize) && reserveAmmo != 0)
+        if (!IsBusy() && currentAmmo != magazineSize && reserveAmmo != 0)
         {
             StartCoroutine(ReloadCR());
         }
@@ -58,8 +64,11 @@ public class GunController : MonoBehaviour {
         UIManager.Instance.UpdateAmmo(currentAmmo, reserveAmmo);
     }
 
-    // Play the shooting animation and deplete ammo from the gun
-    IEnumerator ShootCR()
+    /** Play the shooting animation and deplete ammo from the gun
+     * 
+     * @param soldierController: The soldier that is holding a representation of this gun
+     */
+    IEnumerator ShootCR(SoldierController soldierController)
     {
         if (!shootAnim.isPlaying)
         {
@@ -67,6 +76,7 @@ public class GunController : MonoBehaviour {
             shootAnim.Play();
             StartCoroutine(ShootFlash());
             PlayerController.PhysicsRaycasts(transform.rotation);
+            soldierController.photonView.RPC("ShootActiveWeapon", PhotonTargets.All);
             yield return new WaitForSeconds(shootAnim.clip.length);
             shootAnim.Stop();
             currentAmmo--;
@@ -75,7 +85,7 @@ public class GunController : MonoBehaviour {
     }
 
     // Animates the flash effect at the barrel of the gun
-    IEnumerator ShootFlash()
+    public IEnumerator ShootFlash()
     {
         shootFlash.enabled = true;
         yield return new WaitForSeconds(0.05f);
@@ -150,5 +160,13 @@ public class GunController : MonoBehaviour {
         this.transform.DOLocalMoveY(swapYPosition, 0);
         this.transform.DOLocalRotate(new Vector3(swapXRotate, originalLocalRotation.y, originalLocalRotation.z), 0);
         this.gameObject.SetActive(false);
+    }
+
+    /**
+     * Returns true if the weapon is either reloading or swapping
+     */
+    public bool IsBusy()
+    {
+        return (isReloading || isSwapping);
     }
 }

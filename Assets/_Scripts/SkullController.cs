@@ -6,7 +6,7 @@ public class SkullController : Photon.MonoBehaviour {
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.tag != this.tag)
+        if (other.tag != this.tag && (other.tag == "Blue" || other.tag == "Red"))
         {
             other.GetComponent<PlayerController>().HoldSkull(this);
         }
@@ -15,6 +15,14 @@ public class SkullController : Photon.MonoBehaviour {
     [PunRPC]
     public void DisableSkull()
     {
+        if (this.tag == "Blue")
+        {
+            UIManager.Instance.UpdateMessage("Blue Skull Captured");
+        }
+        else
+        {
+            UIManager.Instance.UpdateMessage("Red Skull Captured");
+        }
         this.gameObject.SetActive(false);
     }
 

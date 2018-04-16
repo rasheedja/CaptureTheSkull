@@ -12,6 +12,7 @@ public class MenuController : MonoBehaviour
 
     void Start()
     {
+
         cam.LookAt(cameraStartLookAt);
         cam.DOLookAt(cameraEndLookAt.position, 10).SetLoops(-1, LoopType.Yoyo);
     }

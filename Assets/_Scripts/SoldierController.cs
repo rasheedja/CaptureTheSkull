@@ -66,7 +66,12 @@ public class SoldierController : Photon.MonoBehaviour {
 	}
 	
 	void Update () {
-		if (!photonView.isMine)
+        // REMOVE ME: ONLY FOR TESTING
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            DecreaseHealth(100);
+        }
+        if (!photonView.isMine)
         {
             transform.position = Vector3.Lerp(transform.position, correctPlayerPos, Time.deltaTime * 10f);
             transform.rotation = Quaternion.Lerp(transform.rotation, correctPlayerRot, Time.deltaTime * 10f);
@@ -166,6 +171,7 @@ public class SoldierController : Photon.MonoBehaviour {
 
             isDead = true;
             this.gameObject.GetComponent<RagdollController>().EnableRagdoll();
+
             if (isHoldingSkull)
             {
                 if (this.tag == "BlueSoldier")

@@ -75,4 +75,5 @@ MonoBehaviour:
   - DisableSkullMessage
   - BlueScoreMessage
   - DestroySelf
+  - HitRigidbody
   DisableAutoOpenWizard: 1

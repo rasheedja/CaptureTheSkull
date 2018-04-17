@@ -185,7 +185,8 @@ public class PlayerController : MonoBehaviour {
                 else
                 {
                     // Make the ragdoll move in the direction it was shot at
-                    hit.transform.GetComponent<Rigidbody>().AddForce(hit.point, ForceMode.Impulse);
+                    Debug.Log("hitting ragdoll");
+                    hit.transform.GetComponent<ObjectManagerBase>().photonView.RPC("HitRigidbody", PhotonTargets.All, new object[] { hit.point });
                 }
             }
         }

@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /**
- * Most of this code is from Lab 9
+ * code based onLab 9
  */
-public class RagdollController : MonoBehaviour
+public class RagdollController : Photon.MonoBehaviour
 {
     void Awake()
     {

@@ -14,6 +14,12 @@ public class ObjectManager : ObjectManagerBase {
         StartCoroutine(DeleteParticle(particle));
     }
 
+    [PunRPC]
+    public override void HitRigidbody(Vector3 hitPoint)
+    {
+        GetComponent<Rigidbody>().AddForce(hitPoint, ForceMode.Impulse);
+    }
+
     IEnumerator DeleteParticle(GameObject particle)
     {
         yield return new WaitForSeconds(particle.GetComponent<ParticleSystem>().main.duration);

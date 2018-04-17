@@ -165,6 +165,6 @@ public class GameManager : Photon.MonoBehaviour {
         PlayerPrefs.SetInt("totalDeaths", totalDeaths);
         PlayerPrefs.SetInt("totalSkullCaptures", totalSkullCaptures);
 
-        SceneManager.LoadSceneAsync(2);
+        SceneManager.LoadScene(2);
     }
 }

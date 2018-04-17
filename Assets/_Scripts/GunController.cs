@@ -22,6 +22,7 @@ public class GunController : MonoBehaviour {
     private bool isReloading = false;
     private bool isSwapping = false;
     private int currentAmmo;
+    private int maxAmmo;
     private Vector3 originalLocalPosition;
     private Vector3 originalLocalRotation;
 
@@ -34,6 +35,7 @@ public class GunController : MonoBehaviour {
     void Start()
     {
         currentAmmo = magazineSize;
+        maxAmmo = reserveAmmo;
         UpdateAmmoCount();
     }
 
@@ -63,6 +65,29 @@ public class GunController : MonoBehaviour {
     public void UpdateAmmoCount()
     {
         UIManager.Instance.UpdateAmmo(currentAmmo, reserveAmmo);
+    }
+
+    /** 
+     * Fill ammo to the max if we need to
+     * 
+     * @return Whether ammo was replenished or not
+     */
+    public bool FillAmmo()
+    {
+        if (!IsAmmoFull())
+        {
+            reserveAmmo = maxAmmo;
+            cockSound.Play();
+            UpdateAmmoCount();
+            return true;
+        }
+        return false;
+    }
+
+    // Whether we have max ammo or not
+    public bool IsAmmoFull()
+    {
+        return reserveAmmo == maxAmmo;
     }
 
     /** Play the shooting animation and deplete ammo from the gun

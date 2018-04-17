@@ -9,6 +9,8 @@ TagManager:
   - Beam
   - BlueSoldier
   - RedSoldier
+  - Primary
+  - Secondary
   layers:
   - Default
   - TransparentFX

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
+using UnityStandardAssets.Characters.FirstPerson;
 
 public class PlayerController : MonoBehaviour {
     public GameObject primaryWeapon;
@@ -50,6 +51,16 @@ public class PlayerController : MonoBehaviour {
                 if (Input.GetButton("Fire1"))
                 {
                     currentWeapon.GetComponent<GunController>().Shoot(soldierController);
+                }
+
+                // Defaults: Right Mouse and Left Alt
+                if (Input.GetButton("Fire2"))
+                {
+                    this.GetComponentInChildren<Camera>().DOFieldOfView(45, 0.5f);
+                }
+                else
+                {
+                    this.GetComponentInChildren<Camera>().DOFieldOfView(60, 0.5f);
                 }
 
                 // TODO: Figure out customisable inputs
@@ -107,6 +118,19 @@ public class PlayerController : MonoBehaviour {
             soldier.transform.position = new Vector3(this.transform.position.x, this.transform.position.y - 0.95f, this.transform.position.z);
             soldier.transform.rotation = this.transform.rotation;
         }
+    }
+
+    public bool ReplenishAmmo(string gunType)
+    {
+        if (gunType == "Primary")
+        {
+            return primaryWeapon.GetComponent<GunController>().FillAmmo();
+        }
+        else if (gunType == "Secondary")
+        {
+            return secondaryWeapon.GetComponent<GunController>().FillAmmo();
+        }
+        return false;
     }
 
     /**

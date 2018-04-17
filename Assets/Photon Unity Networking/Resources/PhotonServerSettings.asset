@@ -69,4 +69,7 @@ MonoBehaviour:
   - HideSkull
   - ShowSkull
   - ShootActiveWeapon
+  - HideItem
+  - DisableItem
+  - EnableItem
   DisableAutoOpenWizard: 1

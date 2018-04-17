@@ -76,5 +76,7 @@ public class UIManager : MonoBehaviour {
         messageText.DOText(message, 1f).SetEase(Ease.Linear);
         yield return new WaitForSeconds(3f);
         messageText.DOFade(0, 2f);
+        yield return new WaitForSeconds(2f);
+        messageText.text = "";
     }
 }

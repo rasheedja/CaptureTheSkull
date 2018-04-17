@@ -115,7 +115,7 @@ public class SoldierController : Photon.MonoBehaviour {
             if (health <= 0)
             {
                 health = 0;
-                photonView.RPC("Die", PhotonTargets.All);
+                photonView.RPC("Die", PhotonTargets.AllBuffered);
             }
 
             if (photonView.isMine)
@@ -174,11 +174,11 @@ public class SoldierController : Photon.MonoBehaviour {
             {
                 if (this.tag == "BlueSoldier")
                 {
-                    UIManager.Instance.UpdateMessage("Red Skull Restored");
+                    UIManager.Instance.UpdateMessage("Red Skull Recovered");
                 }
                 else
                 {
-                    UIManager.Instance.UpdateMessage("Blue Skull Restored");
+                    UIManager.Instance.UpdateMessage("Blue Skull Recovered");
                 }
             }
         }
@@ -206,7 +206,6 @@ public class SoldierController : Photon.MonoBehaviour {
             secondaryWeapon.SetActive(false);
         }
     }
-
 
     [PunRPC]
     public void SelectSecondaryWeapon()

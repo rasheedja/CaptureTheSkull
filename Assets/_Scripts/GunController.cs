@@ -147,12 +147,10 @@ public class GunController : MonoBehaviour {
     {
         isSwapping = true;
 
-
         // The lower animation
         this.transform.DOLocalMoveY(swapYPosition, swapTime);
         this.transform.DOLocalRotate(new Vector3(swapXRotate, originalLocalRotation.y, originalLocalRotation.z), swapTime);
         yield return new WaitForSeconds(swapTime);
-
         isSwapping = false;
         this.gameObject.SetActive(false);
     }

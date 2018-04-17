@@ -12,23 +12,22 @@ public class ConnectionManager : Photon.MonoBehaviour
     public Text playerNameText;
     public Text photonCurrentRoomText;
     public Dropdown teamDropdown;
-    public GameObject createRoomObject;
-    public GameObject joinRoomObject;
-    public GameObject startGameObject;
-
+    public GameObject mainCamera;
+    public GameObject mainCanvas;
+    public GameObject connectionCanvas;
     public InputField photonRoomToJoinText;
 
-
+    private float timer = 0; // The total game time in seconds
 
     void Awake()
     {
         // Connect to the main photon server
-        if (!PhotonNetwork.connectedAndReady) PhotonNetwork.ConnectUsingSettings("v1.0");
+        if (!PhotonNetwork.connectedAndReady) PhotonNetwork.ConnectUsingSettings("v1.0.0");
 
         // create and seta random  player name
         PhotonNetwork.playerName = "Player" + Random.Range(1000, 9999);
         playerNameText.text = "Player Name: " + PhotonNetwork.playerName;
-        photonCurrentRoomText.text = "Room: (no room)";
+        photonCurrentRoomText.text = "Room: (No Room)";
     }
 
     void UpdateRoomInfo()
@@ -69,30 +68,6 @@ public class ConnectionManager : Photon.MonoBehaviour
         }
     }
 
-    public void ButtonHandlerStartGame()
-    {
-        photonView.RPC("StartGame", PhotonTargets.AllBufferedViaServer);
-        // Players can't join in the middle of a game
-        PhotonNetwork.room.IsOpen = false;
-    }
-
-    [PunRPC]
-    void StartGame()
-    {
-        // Save the players chosen team and then load the game
-        if (teamDropdown.value == 0)
-        {
-            Debug.Log("player prefs blue");
-            PlayerPrefs.SetString("team", "Blue");
-        }
-        else
-        {
-            Debug.Log("player prefs red");
-            PlayerPrefs.SetString("team", "Red");
-        }
-        SceneManager.LoadSceneAsync(1);
-    }
-
     // EVENT CALLBACKS
 
     void OnConnectedToMaster()
@@ -113,7 +88,11 @@ public class ConnectionManager : Photon.MonoBehaviour
     {
         Debug.Log("OnCreatedRoom: " + PhotonNetwork.room.Name);
         UpdateRoomInfo();
-
+        
+        // Store the start time in the server so that players will not have to rely on the master client for a working timer
+        // See: https://answers.unity.com/questions/1147387/photon-multiplayer-countdown-timer.html?childToView=1399777#comment-1399777
+        int startTime = PhotonNetwork.ServerTimestamp;
+        PhotonNetwork.room.SetCustomProperties(new ExitGames.Client.Photon.Hashtable { { "startTime", startTime } });
     }
 
     void OnPhotonCreateRoomFailed()
@@ -126,10 +105,12 @@ public class ConnectionManager : Photon.MonoBehaviour
     {
         Debug.Log("OnJoinedRoom: " + PhotonNetwork.room.Name);
         UpdateRoomInfo();
-        createRoomObject.SetActive(false);
-        joinRoomObject.SetActive(false);
-        startGameObject.SetActive(true);
-        // GameObject snowboarder = PhotonNetwork.Instantiate("NetworkedSnowboarder", new Vector3(123.3915f, 0.1103587f, 31.88877f), Quaternion.identity, 0);
+        connectionCanvas.SetActive(false);
+        mainCanvas.SetActive(true);
+        Destroy(mainCamera);
+        int startTime = (int)PhotonNetwork.room.CustomProperties["startTime"];
+        GameManager.Instance.SetStartTime(startTime);
+        GameManager.Instance.InstantiatePlayer(teamDropdown.value == 0 ? "Blue" : "Red");
     }
 
     void OnPhotonPlayerConnected()
@@ -156,5 +137,12 @@ public class ConnectionManager : Photon.MonoBehaviour
         Debug.Log("OnLeftRoom");
         photonStatusText.text = "Status: Left Room!";
         UpdateRoomInfo();
+    }
+
+    // This will only be called by the master client and will set game times for other clients
+    void IncrementTimer()
+    {
+        timer++;
+        GameManager.Instance.photonView.RPC("FormatTime", PhotonTargets.All, new object[] { timer });
     }
 }

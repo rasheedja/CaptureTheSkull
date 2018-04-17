@@ -19,11 +19,13 @@ public class GameManager : Photon.MonoBehaviour {
 
     private int blueCaptures = 0;
     private int redCaptures = 0;
+    private int startTime;
 
     // Track player stats for game over screen
     private int kills = 0;
     private int deaths = 0;
     private int skullsCaptured = 0;
+
 
     void Awake()
     {
@@ -33,13 +35,14 @@ public class GameManager : Photon.MonoBehaviour {
 
     void Start()
     {
-        InstantiatePlayer(PlayerPrefs.GetString("team"));
     }
 
     void Update () {
-        float timeSinceGameStart = Time.timeSinceLevelLoad;
-        float timeRemaining = totalMatchTime - timeSinceGameStart;
-        FormatTime(timeRemaining);
+    }
+
+    public void SetStartTime(int startTime)
+    {
+        this.startTime = startTime;
     }
 
     public void InstantiatePlayer(string playerTeam)
@@ -57,10 +60,15 @@ public class GameManager : Photon.MonoBehaviour {
             GameObject chosenSpawn = GetRandomRedSpawn();
             Instantiate(player, chosenSpawn.transform.position, chosenSpawn.transform.rotation);
         }
+
+        InvokeRepeating("FormatTime", 0, 0.1f);
     }
 
-    public void FormatTime(float timeRemaining)
+    public void FormatTime()
     {
+        int timeSinceGameStart = (PhotonNetwork.ServerTimestamp - startTime) / 1000;
+        int timeRemaining = totalMatchTime - timeSinceGameStart;
+
         // Timer code based on my Lab2/3 implementation
         int minutes = Mathf.FloorToInt(timeRemaining / 60);
         int seconds = Mathf.FloorToInt(timeRemaining % 60);

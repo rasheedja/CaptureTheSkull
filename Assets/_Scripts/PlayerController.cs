@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using DG.Tweening;
 using UnityStandardAssets.Characters.FirstPerson;
 
@@ -9,11 +10,17 @@ public class PlayerController : MonoBehaviour {
     public GameObject secondaryWeapon;
     public GameObject heldSkull;
 
+    private Image crosshair;
     private GameObject currentWeapon;
     private bool isHoldingSkull;
     private SkullController skullController;
     private GameObject soldier; //The soldier model. This represents the players position to other players in the network, stores the player's health, and is also shown when the player dies.
     private SoldierController soldierController;
+
+    void Awake()
+    {
+        crosshair = GameObject.Find("Crosshair").GetComponent<Image>();
+    }
 
     void Start () {
         currentWeapon = primaryWeapon;
@@ -22,12 +29,9 @@ public class PlayerController : MonoBehaviour {
         isHoldingSkull = false;
         currentWeapon.GetComponent<GunController>().UpdateAmmoCount();
 
-        Debug.Log("player controller started");
         if (this.tag == "Blue")
         {
-            Debug.Log("spawning soldier");
             soldier = PhotonNetwork.Instantiate("Soldier_B", this.transform.position, this.transform.rotation, 0);
-            Debug.Log("soldier spawned");
             soldierController = soldier.GetComponent<SoldierController>();
             soldierController.SetOwner(this);
         }
@@ -71,14 +75,18 @@ public class PlayerController : MonoBehaviour {
 
                 if ((Input.GetKeyDown(KeyCode.Alpha1) || Input.GetKeyDown(KeyCode.Keypad1)) && !primaryWeapon.activeInHierarchy && !heldSkull.activeInHierarchy)
                 {
-                    StartCoroutine(SwapWeapon(secondaryWeapon, primaryWeapon));
-                    soldierController.photonView.RPC("SelectPrimaryWeapon", PhotonTargets.AllBuffered);
+                    if (SwapWeapon(secondaryWeapon, primaryWeapon))
+                    {
+                        soldierController.photonView.RPC("SelectPrimaryWeapon", PhotonTargets.AllBuffered);
+                    }
                 }
 
                 if ((Input.GetKeyDown(KeyCode.Alpha2) || Input.GetKeyDown(KeyCode.Keypad2)) && !secondaryWeapon.activeInHierarchy)
                 {
-                    StartCoroutine(SwapWeapon(primaryWeapon, secondaryWeapon));
-                    soldierController.photonView.RPC("SelectSecondaryWeapon", PhotonTargets.AllBuffered);
+                    if (SwapWeapon(primaryWeapon, secondaryWeapon))
+                    {
+                        soldierController.photonView.RPC("SelectSecondaryWeapon", PhotonTargets.AllBuffered);
+                    }
                 }
 
                 // Tell the soldier model the direction we are moving in, determing the animation played in the soldier model.
@@ -118,6 +126,9 @@ public class PlayerController : MonoBehaviour {
             soldier.transform.position = new Vector3(this.transform.position.x, this.transform.position.y - 0.95f, this.transform.position.z);
             soldier.transform.rotation = this.transform.rotation;
         }
+
+        // Fire the raycast to determine crosshair colour
+        PhysicsCrosshairRaycast();
     }
 
     public bool ReplenishAmmo(string gunType)
@@ -145,15 +156,9 @@ public class PlayerController : MonoBehaviour {
 
         if (Physics.Raycast(centreOfScreenRay, out hit))
         {
-            Debug.Log("Raycast hit: " + hit.transform.name);
-            Debug.Log(shooterRotation);
-            //hit.transform.GetComponent<ObjectManagerBase>().Hit(hit, shooterRotation);
-            Debug.Log(hit.transform.GetComponent<ObjectManagerBase>().photonView);
             hit.transform.GetComponent<ObjectManagerBase>().photonView.RPC("Hit", PhotonTargets.All, new object[] { hit.point, shooterRotation });
 
             GameObject hitGameObject = hit.transform.root.gameObject;
-            Debug.Log(hitGameObject.tag);
-            Debug.Log(hitGameObject);
             if (hitGameObject.tag == "BlueSoldier" || hitGameObject.tag == "RedSoldier")
             {
                 SoldierController hitSoldierController = hitGameObject.GetComponent<SoldierController>();
@@ -166,6 +171,47 @@ public class PlayerController : MonoBehaviour {
         }
     }
 
+    /**
+     * This raycast is called every frame and is used to determine the colour of the crosshair
+     */
+    private void PhysicsCrosshairRaycast()
+    {
+        Vector3 centreOfScreen = new Vector3(Screen.width * 0.5f, Screen.height * 0.5f, 0);
+        Ray centreOfScreenRay = Camera.main.ScreenPointToRay(centreOfScreen);
+        RaycastHit hit;
+
+        if (Physics.Raycast(centreOfScreenRay, out hit))
+        {
+            GameObject hitGameObject = hit.transform.root.gameObject;
+            if (hitGameObject.tag == "BlueSoldier")
+            {
+                if (this.tag == "Blue")
+                {
+                    crosshair.color = new Color(0f, 255f, 0f);
+                }
+                else if (this.tag == "Red")
+                {
+                    crosshair.color = new Color(255f, 0f, 0f);
+
+                }
+            }
+            else if (hitGameObject.tag == "RedSoldier")
+            {
+                if (this.tag == "Blue")
+                {
+                    crosshair.color = new Color(255f, 0f, 0f);
+                }
+                else if (this.tag == "Red")
+                {
+                    crosshair.color = new Color(0f, 255f, 0f);
+                }
+            }
+            else
+            {
+                crosshair.color = new Color(255f, 255f, 255f);
+            }
+        }
+    }
     public bool IsHoldingSkull()
     {
         return isHoldingSkull;
@@ -181,7 +227,8 @@ public class PlayerController : MonoBehaviour {
         // When holding a skull, you can only use your pistol
         if (!secondaryWeapon.activeInHierarchy)
         {
-            StartCoroutine(SwapWeapon(primaryWeapon, secondaryWeapon));
+            // Ensure the weapon is swapped if we grab the skull
+            SwapWeapon(primaryWeapon, secondaryWeapon, true);
         }
 
         skullController.photonView.RPC("DisableSkull", PhotonTargets.AllBuffered);
@@ -208,18 +255,25 @@ public class PlayerController : MonoBehaviour {
         GameManager.Instance.IncrementSkullCaptures();
     }
 
-    IEnumerator SwapWeapon(GameObject weaponFrom, GameObject weaponTo)
+    public bool SwapWeapon(GameObject weaponFrom, GameObject weaponTo, bool forceSwap = false)
+    {
+        if (!weaponFrom.GetComponent<GunController>().IsBusy() || forceSwap)
+        {
+            StartCoroutine(SwapWeaponCR(weaponFrom, weaponTo));
+            return true; // We swapped the weapon
+        }
+        return false; // We didn't swap the weapon
+    }
+
+    IEnumerator SwapWeaponCR(GameObject weaponFrom, GameObject weaponTo)
     {
         GunController weaponFromScript = weaponFrom.GetComponent<GunController>();
         GunController weaponToScript = weaponTo.GetComponent<GunController>();
 
-        if (!weaponFromScript.IsBusy())
-        {
-            StartCoroutine(weaponFromScript.LowerWeapon());
-            yield return new WaitForSeconds(weaponFromScript.swapTime);
-            StartCoroutine(weaponToScript.RaiseWeapon());
-            currentWeapon = weaponTo;
-        }
+        StartCoroutine(weaponFromScript.LowerWeapon());
+        yield return new WaitForSeconds(weaponFromScript.swapTime);
+        StartCoroutine(weaponToScript.RaiseWeapon());
+        currentWeapon = weaponTo;
     }
 
     /**
@@ -232,7 +286,7 @@ public class PlayerController : MonoBehaviour {
         currentWeapon.SetActive(false);
         if (isHoldingSkull) { DropSkull(); }
         string team = this.gameObject.tag;
-        soldierController.photonView.RPC("Despawn", PhotonTargets.All, new object[] { 10 });
+        soldierController.photonView.RPC("Despawn", PhotonTargets.AllBuffered, new object[] { 10 });
         soldierController = null;
 
         GameObject newSpawn = GameManager.Instance.GetRandomBlueSpawn();

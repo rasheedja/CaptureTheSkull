@@ -17,11 +17,11 @@ public class SkullController : Photon.MonoBehaviour {
     {
         if (this.tag == "Blue")
         {
-            UIManager.Instance.UpdateMessage("Blue Skull Captured");
+            UIManager.Instance.UpdateMessage("Blue Skull Stolen");
         }
         else
         {
-            UIManager.Instance.UpdateMessage("Red Skull Captured");
+            UIManager.Instance.UpdateMessage("Red Skull Stolen");
         }
         this.gameObject.SetActive(false);
     }

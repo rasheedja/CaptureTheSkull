@@ -7,6 +7,11 @@ public class GrenadeManager : ObjectManagerBase {
     public ParticleSystem explosion;
     public AudioSource explosionSound;
 
+    void Start()
+    {
+        ArmGrenade(5);
+    }
+
     [PunRPC]
     public override void HitRigidbody(Vector3 hitPoint)
     {

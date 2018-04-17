@@ -17,7 +17,7 @@ public class PlayerController : MonoBehaviour {
     private SkullController skullController;
     private GameObject soldier; //The soldier model. This represents the players position to other players in the network, stores the player's health, and is also shown when the player dies.
     private SoldierController soldierController;
-    private int grenadeAmmo = 3;
+    private int grenadeAmmo;
     private int grenadeMax;
 
     void Awake()
@@ -31,6 +31,7 @@ public class PlayerController : MonoBehaviour {
         heldSkull.SetActive(false);
         isHoldingSkull = false;
         currentWeapon.GetComponent<GunController>().UpdateAmmoCount();
+        grenadeAmmo = 3;
         grenadeMax = grenadeAmmo;
 
         if (this.tag == "Blue")
@@ -102,6 +103,7 @@ public class PlayerController : MonoBehaviour {
                 {
                     if (Input.GetKeyDown(KeyCode.Q))
                     {
+                        if (isHoldingSkull) { DropSkull(); }
                         PhotonNetwork.LeaveRoom();
                         Cursor.lockState = CursorLockMode.None;
                         Cursor.visible = true;
@@ -176,7 +178,6 @@ public class PlayerController : MonoBehaviour {
         GameObject grenade = PhotonNetwork.Instantiate("M67_Grenade", new Vector3(transform.position.x, transform.position.y + 1f, transform.position.z), transform.rotation, 0);
         Rigidbody grenadeRb = grenade.GetComponent<Rigidbody>();
         grenadeRb.AddForce(Camera.main.transform.forward * 20, ForceMode.Impulse);
-        grenade.GetComponent<GrenadeManager>().ArmGrenade(5);
         grenadeAmmo--;
         UIManager.Instance.UpdateGrenades(grenadeAmmo);
     }
@@ -379,6 +380,7 @@ public class PlayerController : MonoBehaviour {
         yield return new WaitForSeconds(2);
         soldier = PhotonNetwork.Instantiate(soldierPrefab, this.transform.position, this.transform.rotation, 0);
         soldierController = soldier.GetComponent<SoldierController>();
+        ReplenishAmmo("Grenade");
         this.gameObject.GetComponent<CharacterController>().enabled = true;
         currentWeapon.SetActive(true);
         soldier.GetComponent<SoldierController>().SetOwner(this);
@@ -387,5 +389,10 @@ public class PlayerController : MonoBehaviour {
     public SoldierController GetSoldierController()
     {
         return soldierController;
+    }
+
+    void OnApplicationQuit()
+    {
+        if (isHoldingSkull) { DropSkull(); }
     }
 }

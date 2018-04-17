@@ -17,6 +17,8 @@ public class PlayerController : MonoBehaviour {
     private SkullController skullController;
     private GameObject soldier; //The soldier model. This represents the players position to other players in the network, stores the player's health, and is also shown when the player dies.
     private SoldierController soldierController;
+    private int grenadeAmmo = 3;
+    private int grenadeMax;
 
     void Awake()
     {
@@ -29,6 +31,7 @@ public class PlayerController : MonoBehaviour {
         heldSkull.SetActive(false);
         isHoldingSkull = false;
         currentWeapon.GetComponent<GunController>().UpdateAmmoCount();
+        grenadeMax = grenadeAmmo;
 
         if (this.tag == "Blue")
         {
@@ -87,6 +90,11 @@ public class PlayerController : MonoBehaviour {
                     {
                         soldierController.photonView.RPC("SelectSecondaryWeapon", PhotonTargets.AllBuffered);
                     }
+                }
+
+                if (Input.GetKeyDown(KeyCode.G) && !isHoldingSkull && grenadeAmmo != 0)
+                {
+                    ThrowGrenade();
                 }
 
                 // If Left Shift held down with some key
@@ -153,7 +161,24 @@ public class PlayerController : MonoBehaviour {
         {
             return secondaryWeapon.GetComponent<GunController>().FillAmmo();
         }
+        else if (gunType == "Grenade")
+        {
+            if (grenadeAmmo == grenadeMax) { return false; }
+            grenadeAmmo = grenadeMax;
+            UIManager.Instance.UpdateGrenades(grenadeAmmo);
+            return true;
+        }
         return false;
+    }
+
+    public void ThrowGrenade()
+    {
+        GameObject grenade = PhotonNetwork.Instantiate("M67_Grenade", new Vector3(transform.position.x, transform.position.y + 1f, transform.position.z), transform.rotation, 0);
+        Rigidbody grenadeRb = grenade.GetComponent<Rigidbody>();
+        grenadeRb.AddForce(Camera.main.transform.forward * 20, ForceMode.Impulse);
+        grenade.GetComponent<GrenadeManager>().ArmGrenade(5);
+        grenadeAmmo--;
+        UIManager.Instance.UpdateGrenades(grenadeAmmo);
     }
 
     /**
@@ -185,9 +210,12 @@ public class PlayerController : MonoBehaviour {
                 else
                 {
                     // Make the ragdoll move in the direction it was shot at
-                    Debug.Log("hitting ragdoll");
                     hit.transform.GetComponent<ObjectManagerBase>().photonView.RPC("HitRigidbody", PhotonTargets.All, new object[] { hit.point });
                 }
+            }
+            else if (hitGameObject.tag == "Grenade")
+            {
+                hit.transform.GetComponent<ObjectManagerBase>().photonView.RPC("HitRigidbody", PhotonTargets.All, new object[] { hit.point });
             }
         }
     }
@@ -354,5 +382,10 @@ public class PlayerController : MonoBehaviour {
         this.gameObject.GetComponent<CharacterController>().enabled = true;
         currentWeapon.SetActive(true);
         soldier.GetComponent<SoldierController>().SetOwner(this);
+    }
+
+    public SoldierController GetSoldierController()
+    {
+        return soldierController;
     }
 }

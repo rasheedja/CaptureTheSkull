@@ -76,4 +76,5 @@ MonoBehaviour:
   - BlueScoreMessage
   - DestroySelf
   - HitRigidbody
+  - ExplodeRigidbody
   DisableAutoOpenWizard: 1

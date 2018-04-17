@@ -20,6 +20,12 @@ public class ObjectManager : ObjectManagerBase {
         GetComponent<Rigidbody>().AddForce(hitPoint, ForceMode.Impulse);
     }
 
+    [PunRPC]
+    public override void ExplodeRigidbody(float explosionForce, Vector3 explosionPosition, float explosionRadius)
+    {
+        GetComponent<Rigidbody>().AddExplosionForce(2500, explosionPosition, explosionRadius);
+    }
+
     IEnumerator DeleteParticle(GameObject particle)
     {
         yield return new WaitForSeconds(particle.GetComponent<ParticleSystem>().main.duration);

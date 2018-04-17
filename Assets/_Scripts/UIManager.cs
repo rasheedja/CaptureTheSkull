@@ -16,6 +16,7 @@ public class UIManager : MonoBehaviour {
     public Text killsText;
     public Text deathsText;
     public Text messageText;
+    public Text grenadesText;
 
     public static UIManager Instance { get; private set; }
 
@@ -24,10 +25,15 @@ public class UIManager : MonoBehaviour {
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
     }
-    
+
     public void UpdateAmmo(int currentAmmo, int reserveAmmo)
     {
         ammoText.text = "Ammo: " + currentAmmo + "/" + reserveAmmo;
+    }
+
+    public void UpdateGrenades(int grenades)
+    {
+        grenadesText.text = "Grenades: " + grenades;
     }
 
     public void UpdateHealth(int health)

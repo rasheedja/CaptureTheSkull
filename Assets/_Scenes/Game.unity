@@ -2916,7 +2916,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2e4f1042e195adc47a4e7cf3fc2aee7e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  totalMatchTime: 30
+  totalMatchTime: 300
   scoreToWin: 5
   FPSController: {fileID: 1152476840539912, guid: 32ef8da59ffc95141a5e7fd783381d51,
     type: 2}

@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
 using UnityStandardAssets.Characters.FirstPerson;
+using UnityEngine.SceneManagement;
 
 public class PlayerController : MonoBehaviour {
     public GameObject primaryWeapon;
@@ -67,7 +68,6 @@ public class PlayerController : MonoBehaviour {
                     this.GetComponentInChildren<Camera>().DOFieldOfView(60, 0.5f);
                 }
 
-                // TODO: Figure out customisable inputs
                 if (Input.GetKeyDown(KeyCode.R))
                 {
                     currentWeapon.GetComponent<GunController>().Reload();
@@ -86,6 +86,18 @@ public class PlayerController : MonoBehaviour {
                     if (SwapWeapon(primaryWeapon, secondaryWeapon))
                     {
                         soldierController.photonView.RPC("SelectSecondaryWeapon", PhotonTargets.AllBuffered);
+                    }
+                }
+
+                // If Left Shift held down with some key
+                if (Input.GetKey(KeyCode.LeftShift))
+                {
+                    if (Input.GetKeyDown(KeyCode.Q))
+                    {
+                        PhotonNetwork.LeaveRoom();
+                        Cursor.lockState = CursorLockMode.None;
+                        Cursor.visible = true;
+                        SceneManager.LoadScene(0);
                     }
                 }
 
@@ -159,13 +171,21 @@ public class PlayerController : MonoBehaviour {
             hit.transform.GetComponent<ObjectManagerBase>().photonView.RPC("Hit", PhotonTargets.All, new object[] { hit.point, shooterRotation });
 
             GameObject hitGameObject = hit.transform.root.gameObject;
-            if (hitGameObject.tag == "BlueSoldier" || hitGameObject.tag == "RedSoldier")
+            if (hitGameObject.tag == "BlueSoldier" || hitGameObject.tag == "RedSoldier") // i.e. another player
             {
                 SoldierController hitSoldierController = hitGameObject.GetComponent<SoldierController>();
-                hitSoldierController.photonView.RPC("DecreaseHealth", PhotonTargets.All, new object[] { 10 });
-                if (hitSoldierController.GetIsDead())
+                if (!hitSoldierController.GetIsDead()) // Decrease health if not dead
                 {
-                    GameManager.Instance.IncrementKills();
+                    hitSoldierController.photonView.RPC("DecreaseHealth", PhotonTargets.AllBuffered, new object[] { 10 });
+                    if (hitSoldierController.GetIsDead()) // If they died, increment your kills
+                    {
+                        GameManager.Instance.IncrementKills();
+                    }
+                }
+                else
+                {
+                    // Make the ragdoll move in the direction it was shot at
+                    hit.transform.GetComponent<Rigidbody>().AddForce(hit.point, ForceMode.Impulse);
                 }
             }
         }
@@ -185,25 +205,41 @@ public class PlayerController : MonoBehaviour {
             GameObject hitGameObject = hit.transform.root.gameObject;
             if (hitGameObject.tag == "BlueSoldier")
             {
-                if (this.tag == "Blue")
+                // Only change colours for alive players
+                if (!hitGameObject.GetComponent<SoldierController>().GetIsDead())
                 {
-                    crosshair.color = new Color(0f, 255f, 0f);
-                }
-                else if (this.tag == "Red")
-                {
-                    crosshair.color = new Color(255f, 0f, 0f);
+                    if (this.tag == "Blue")
+                    {
+                        crosshair.color = new Color(0f, 255f, 0f);
+                    }
+                    else if (this.tag == "Red")
+                    {
+                        crosshair.color = new Color(255f, 0f, 0f);
 
+                    }
+                }
+                else
+                {
+                    crosshair.color = new Color(255f, 255f, 255f);
                 }
             }
             else if (hitGameObject.tag == "RedSoldier")
             {
-                if (this.tag == "Blue")
+                // Only change colours for alive players
+                if (!hitGameObject.GetComponent<SoldierController>().GetIsDead())
                 {
-                    crosshair.color = new Color(255f, 0f, 0f);
+                    if (this.tag == "Blue")
+                    {
+                        crosshair.color = new Color(255f, 0f, 0f);
+                    }
+                    else if (this.tag == "Red")
+                    {
+                        crosshair.color = new Color(0f, 255f, 0f);
+                    }
                 }
-                else if (this.tag == "Red")
+                else
                 {
-                    crosshair.color = new Color(0f, 255f, 0f);
+                    crosshair.color = new Color(255f, 255f, 255f);
                 }
             }
             else
@@ -223,20 +259,25 @@ public class PlayerController : MonoBehaviour {
         heldSkull.SetActive(true);
         soldierController.photonView.RPC("ShowSkull", PhotonTargets.AllBuffered);
         this.skullController = skullController;
-        
+
         // When holding a skull, you can only use your pistol
         if (!secondaryWeapon.activeInHierarchy)
         {
             // Ensure the weapon is swapped if we grab the skull
-            SwapWeapon(primaryWeapon, secondaryWeapon, true);
+            if (SwapWeapon(primaryWeapon, secondaryWeapon, true))
+            {
+                soldierController.photonView.RPC("SelectSecondaryWeapon", PhotonTargets.AllBuffered);
+            }
         }
 
+        skullController.DisableSkull();
         skullController.photonView.RPC("DisableSkull", PhotonTargets.AllBuffered);
+        skullController.photonView.RPC("DisableSkullMessage", PhotonTargets.All);
     }
 
     public void DropSkull()
     {
-        Debug.Log("dropping skull");
+        isHoldingSkull = false;
         heldSkull.SetActive(false);
         soldierController.photonView.RPC("HideSkull", PhotonTargets.AllBuffered);
         skullController.photonView.RPC("EnableSkull", PhotonTargets.AllBuffered);
@@ -247,10 +288,12 @@ public class PlayerController : MonoBehaviour {
         if (this.tag == "Blue")
         {
             GameManager.Instance.photonView.RPC("IncrementBlueScore", PhotonTargets.AllBuffered);
+            GameManager.Instance.photonView.RPC("BlueScoreMessage", PhotonTargets.All);
         }
         else
         {
             GameManager.Instance.photonView.RPC("IncrementRedScore", PhotonTargets.AllBuffered);
+            GameManager.Instance.photonView.RPC("RedScoreMessage", PhotonTargets.All);
         }
         GameManager.Instance.IncrementSkullCaptures();
     }
@@ -286,15 +329,26 @@ public class PlayerController : MonoBehaviour {
         currentWeapon.SetActive(false);
         if (isHoldingSkull) { DropSkull(); }
         string team = this.gameObject.tag;
-        soldierController.photonView.RPC("Despawn", PhotonTargets.AllBuffered, new object[] { 10 });
+        soldierController.photonView.RPC("Despawn", PhotonTargets.AllBuffered, new object[] { 30 });
         soldierController = null;
+        GameObject newSpawn;
+        string soldierPrefab;
 
-        GameObject newSpawn = GameManager.Instance.GetRandomBlueSpawn();
+        if (this.tag == "Blue")
+        {
+            newSpawn = GameManager.Instance.GetRandomBlueSpawn();
+            soldierPrefab = "Soldier_B";
+        }
+        else
+        {
+            newSpawn = GameManager.Instance.GetRandomRedSpawn();
+            soldierPrefab = "Soldier_R";
+        }
         yield return new WaitForSeconds(3);
         this.transform.DORotate(newSpawn.transform.rotation.eulerAngles, 2);
         this.transform.DOMove(newSpawn.transform.position, 2);
         yield return new WaitForSeconds(2);
-        soldier = PhotonNetwork.Instantiate("Soldier_B", this.transform.position, this.transform.rotation, 0);
+        soldier = PhotonNetwork.Instantiate(soldierPrefab, this.transform.position, this.transform.rotation, 0);
         soldierController = soldier.GetComponent<SoldierController>();
         this.gameObject.GetComponent<CharacterController>().enabled = true;
         currentWeapon.SetActive(true);

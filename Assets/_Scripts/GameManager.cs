@@ -103,6 +103,11 @@ public class GameManager : Photon.MonoBehaviour {
         blueCaptures++;
         if (blueCaptures >= scoreToWin) { EndGame(); }
         UIManager.Instance.UpdateBlueScore(blueCaptures);
+    }
+
+    [PunRPC]
+    public void BlueScoreMessage()
+    {
         UIManager.Instance.UpdateMessage("Red Skull Captured");
     }
 
@@ -112,6 +117,10 @@ public class GameManager : Photon.MonoBehaviour {
         redCaptures++;
         if (redCaptures >= scoreToWin) { EndGame(); }
         UIManager.Instance.UpdateRedScore(redCaptures);
+    }
+
+    public void RedScoreMessage()
+    {
         UIManager.Instance.UpdateMessage("Blue Skull Captured");
     }
 

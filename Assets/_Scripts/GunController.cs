@@ -48,7 +48,6 @@ public class GunController : MonoBehaviour {
     {
         if (currentAmmo != 0 && !IsBusy())
         {
-            Debug.Log(soldierController);
             StartCoroutine(ShootCR(soldierController));
         }
     }

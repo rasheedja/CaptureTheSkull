@@ -19,6 +19,7 @@ public class SoldierController : Photon.MonoBehaviour {
     private int maxHealth;
     private int health = 100;
     private bool isDead = false;
+    private bool isHoldingSkull = false;
 
     private Animator animatorController;
     private int movingForwardHashId;
@@ -42,22 +43,19 @@ public class SoldierController : Photon.MonoBehaviour {
     }
 
     void Start () {
-        secondaryWeapon.SetActive(false);
-        heldSkull.SetActive(false);
-
         if (photonView.isMine) {
             // Hide the soldier from the owner
-            foreach (SkinnedMeshRenderer renderer in this.gameObject.GetComponentsInChildren<SkinnedMeshRenderer>())
+            foreach (SkinnedMeshRenderer renderer in this.gameObject.GetComponentsInChildren<SkinnedMeshRenderer>(true))
             {
                 renderer.enabled = false;
             }
             // Hide the guns from the owner
-            foreach (MeshRenderer renderer in this.gameObject.GetComponentsInChildren<MeshRenderer>())
+            foreach (MeshRenderer renderer in this.gameObject.GetComponentsInChildren<MeshRenderer>(true))
             {
                 renderer.enabled = false;
             }
             // Disable colliders for the hidden soldier
-            foreach (Collider collider in this.gameObject.GetComponentsInChildren<Collider>())
+            foreach (Collider collider in this.gameObject.GetComponentsInChildren<Collider>(true))
             {
                 collider.enabled = false;
             }
@@ -72,11 +70,6 @@ public class SoldierController : Photon.MonoBehaviour {
         {
             transform.position = Vector3.Lerp(transform.position, correctPlayerPos, Time.deltaTime * 10f);
             transform.rotation = Quaternion.Lerp(transform.rotation, correctPlayerRot, Time.deltaTime * 10f);
-        }
-
-        if (Input.GetKeyDown(KeyCode.P))
-        {
-            DecreaseHealth(100);
         }
     }
 
@@ -120,7 +113,6 @@ public class SoldierController : Photon.MonoBehaviour {
 
             if (photonView.isMine)
             {
-                Debug.Log("mine");
                 UIManager.Instance.UpdateHealth(health);
             }
         }
@@ -152,15 +144,19 @@ public class SoldierController : Photon.MonoBehaviour {
             // If it's mine, re-enable renderers and colliders
             if (photonView.isMine)
             {
-                foreach (SkinnedMeshRenderer renderer in this.gameObject.GetComponentsInChildren<SkinnedMeshRenderer>())
+                foreach (SkinnedMeshRenderer renderer in this.gameObject.GetComponentsInChildren<SkinnedMeshRenderer>(true))
                 {
                     renderer.enabled = true;
                 }
-                foreach (MeshRenderer renderer in this.gameObject.GetComponentsInChildren<MeshRenderer>())
+                foreach (MeshRenderer renderer in this.gameObject.GetComponentsInChildren<MeshRenderer>(true))
                 {
-                    renderer.enabled = true;
+                    // Render everything apart from the gun flash
+                    if (renderer.gameObject.name != "FX_GunFlash")
+                    {
+                        renderer.enabled = true;
+                    }
                 }
-                foreach (Collider collider in this.gameObject.GetComponentsInChildren<Collider>())
+                foreach (Collider collider in this.gameObject.GetComponentsInChildren<Collider>(true))
                 {
                     collider.enabled = true;
                 }
@@ -170,7 +166,7 @@ public class SoldierController : Photon.MonoBehaviour {
 
             isDead = true;
             this.gameObject.GetComponent<RagdollController>().EnableRagdoll();
-            if (heldSkull.GetActive())
+            if (isHoldingSkull)
             {
                 if (this.tag == "BlueSoldier")
                 {
@@ -188,33 +184,44 @@ public class SoldierController : Photon.MonoBehaviour {
     public void Despawn(int despawnTime)
     {
         owner = null;
-        StartCoroutine(DespawnCR(despawnTime));
+        if (photonView.isMine)
+        {
+            StartCoroutine(DespawnCR(despawnTime));
+        }
     }
 
     IEnumerator DespawnCR(int despawnTime)
     {
         yield return new WaitForSeconds(despawnTime);
-        Destroy(this.gameObject);
+        PhotonNetwork.Destroy(this.gameObject);
     }
 
     [PunRPC]
     public void SelectPrimaryWeapon()
     {
-        if (!photonView.isMine)
-        {
-            primaryWeapon.SetActive(true);
-            secondaryWeapon.SetActive(false);
-        }
+        primaryWeapon.SetActive(true);
+        secondaryWeapon.SetActive(false);
     }
 
     [PunRPC]
     public void SelectSecondaryWeapon()
     {
-        if (!photonView.isMine)
-        {
-            secondaryWeapon.SetActive(true);
-            primaryWeapon.SetActive(false);
-        }
+        secondaryWeapon.SetActive(true);
+        primaryWeapon.SetActive(false);
+    }
+
+    [PunRPC]
+    public void ShowSkull()
+    {
+        heldSkull.SetActive(true);
+        isHoldingSkull = true;
+    }
+
+    [PunRPC]
+    public void HideSkull()
+    {
+        heldSkull.SetActive(false);
+        isHoldingSkull = false;
     }
 
     [PunRPC]
@@ -273,7 +280,8 @@ public class SoldierController : Photon.MonoBehaviour {
     public void MoveLeft()
     {
         if (!photonView.isMine)
-        { animatorController.SetBool(movingForwardHashId, false);
+        {
+            animatorController.SetBool(movingForwardHashId, false);
             animatorController.SetBool(movingBackwardHashId, false);
             animatorController.SetBool(movingLeftHashId, true);
             animatorController.SetBool(movingRightHashId, false);
@@ -284,7 +292,8 @@ public class SoldierController : Photon.MonoBehaviour {
     public void MoveRight()
     {
         if (!photonView.isMine)
-        { animatorController.SetBool(movingForwardHashId, false);
+        {
+            animatorController.SetBool(movingForwardHashId, false);
             animatorController.SetBool(movingBackwardHashId, false);
             animatorController.SetBool(movingLeftHashId, false);
             animatorController.SetBool(movingRightHashId, true);
@@ -309,24 +318,6 @@ public class SoldierController : Photon.MonoBehaviour {
         if (!photonView.isMine)
         {
             animatorController.SetTrigger(jumpHashId);
-        }
-    }
-
-    [PunRPC]
-    public void ShowSkull()
-    {
-        if (!photonView.isMine)
-        {
-            this.heldSkull.SetActive(true);
-        }
-    }
-
-    [PunRPC]
-    public void HideSkull()
-    {
-        if (!photonView.isMine)
-        {
-            this.heldSkull.SetActive(false);
         }
     }
 

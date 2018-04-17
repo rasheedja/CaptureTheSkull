@@ -15,6 +15,12 @@ public class SkullController : Photon.MonoBehaviour {
     [PunRPC]
     public void DisableSkull()
     {
+        this.gameObject.SetActive(false);
+    }
+
+    [PunRPC]
+    public void DisableSkullMessage()
+    {
         if (this.tag == "Blue")
         {
             UIManager.Instance.UpdateMessage("Blue Skull Stolen");
@@ -23,7 +29,6 @@ public class SkullController : Photon.MonoBehaviour {
         {
             UIManager.Instance.UpdateMessage("Red Skull Stolen");
         }
-        this.gameObject.SetActive(false);
     }
 
     [PunRPC]

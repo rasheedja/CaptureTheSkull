@@ -22,7 +22,7 @@ public class ConnectionManager : Photon.MonoBehaviour
     void Awake()
     {
         // Connect to the main photon server
-        if (!PhotonNetwork.connectedAndReady) PhotonNetwork.ConnectUsingSettings("v1.0.0");
+        if (!PhotonNetwork.connectedAndReady) PhotonNetwork.ConnectUsingSettings("v1.0.1");
 
         // create and seta random  player name
         PhotonNetwork.playerName = "Player" + Random.Range(1000, 9999);
@@ -98,6 +98,7 @@ public class ConnectionManager : Photon.MonoBehaviour
     void OnPhotonCreateRoomFailed()
     {
         Debug.Log("OnPhotonCreateRoomFailed");
+        photonStatusText.text = "Status: Create Room Failed!";
         UpdateRoomInfo();
     }
 

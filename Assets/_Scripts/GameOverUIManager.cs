@@ -21,13 +21,13 @@ public class GameOverUIManager : Photon.MonoBehaviour
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
 
-        UpdateBlueScore(PlayerPrefs.GetInt("blueScore"));
-        UpdateRedScore(PlayerPrefs.GetInt("redScore"));
-        UpdateYourKillsText(PlayerPrefs.GetInt("kills"));
-        UpdateYourDeathsText(PlayerPrefs.GetInt("deaths"));
-        UpdateSkullsYouCapturedText(PlayerPrefs.GetInt("skullCaptures"));
+        UpdateBlueScore(PlayerPrefs.GetInt("blueScore", 0));
+        UpdateRedScore(PlayerPrefs.GetInt("redScore", 0));
+        UpdateYourKillsText(PlayerPrefs.GetInt("kills", 0));
+        UpdateYourDeathsText(PlayerPrefs.GetInt("deaths", 0));
+        UpdateSkullsYouCapturedText(PlayerPrefs.GetInt("skullCaptures", 0));
 
-        string winner = PlayerPrefs.GetString("winner");
+        string winner = PlayerPrefs.GetString("winner", "noone");
 
         if (winner == "blue")
         {

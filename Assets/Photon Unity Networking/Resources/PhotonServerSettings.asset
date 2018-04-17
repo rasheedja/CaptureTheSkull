@@ -72,4 +72,7 @@ MonoBehaviour:
   - HideItem
   - DisableItem
   - EnableItem
+  - DisableSkullMessage
+  - BlueScoreMessage
+  - DestroySelf
   DisableAutoOpenWizard: 1
